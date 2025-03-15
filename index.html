@@ -19,8 +19,19 @@
 
         async function setup() {
             createCanvas(640, 480);
-            video = createCapture(VIDEO);
+
+            // カメラ映像を取得
+            let constraints = {
+                video: {
+                    facingMode: "user", // スマホの場合は前面カメラ
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 }
+                }
+            };
+
+            video = createCapture(constraints);
             video.size(640, 480);
+            video.hide(); // ← カメラ映像を非表示にする
 
             osc1 = new p5.Oscillator('sine');
             osc2 = new p5.Oscillator('triangle');
@@ -62,12 +73,12 @@
 
         function draw() {
             background(0);
-            image(video, 0, 0, width, height);
+            image(video, 0, 0, width, height); // カメラ映像を表示
 
             if (!isStarted) {
                 fill(255, 0, 0);
                 textSize(20);
-                text("画面をクリックしてください", 20, 30);
+                text("画面をクリックしてください", width / 2, height / 2);
                 return;
             }
 
@@ -84,6 +95,7 @@
 
         function mousePressed() {
             if (!isStarted) {
+                userStartAudio(); // ← これを追加してオーディオの許可を得る
                 osc1.start();
                 osc2.start();
                 isStarted = true;
