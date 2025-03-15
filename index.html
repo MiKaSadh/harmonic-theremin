@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Harmonic Theremin</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+</head>
+<body>
+    <script>
+        let video;
+        let detector;
+        let osc1, osc2;
+        let isStarted = false;
+        let scale = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88]; // Cメジャースケール
+        let targetFreq = 261.63;
+        let targetHarmonicFreq = 329.63;
+
+        async function setup() {
+            createCanvas(640, 480);
+            video = createCapture(VIDEO);
+            video.size(640, 480);
+
+            osc1 = new p5.Oscillator('sine');
+            osc2 = new p5.Oscillator('triangle');
+
+            await initHandPoseDetection();
+        }
+
+        async function initHandPoseDetection() {
+            detector = await handPoseDetection.createDetector(
+                handPoseDetection.SupportedModels.MediaPipeHands,
+                {
+                    runtime: 'tfjs',
+                    modelType: 'full',
+                    maxHands: 2
+                }
+            );
+        }
+
+        async function detectHands() {
+            const hands = await detector.estimateHands(video.elt);
+            if (hands.length > 0) {
+                let rightHand = hands.find(h => h.handedness === 'Right');
+                let leftHand = hands.find(h => h.handedness === 'Left');
+
+                if (leftHand) {
+                    let leftHandY = leftHand.keypoints[0].y / height;
+                    let index = floor(map(leftHandY, 1, 0, 0, scale.length));
+                    index = constrain(index, 0, scale.length - 1);
+                    targetFreq = scale[index];
+                }
+                if (rightHand) {
+                    let rightHandY = rightHand.keypoints[0].y / height;
+                    let harmonicIndex = floor(map(rightHandY, 1, 0, 0, scale.length));
+                    harmonicIndex = constrain(harmonicIndex, 0, scale.length - 1);
+                    targetHarmonicFreq = scale[harmonicIndex];
+                }
+            }
+        }
+
+        function draw() {
+            background(0);
+            image(video, 0, 0, width, height);
+
+            if (!isStarted) {
+                fill(255, 0, 0);
+                textSize(20);
+                text("画面をクリックしてください", 20, 30);
+                return;
+            }
+
+            detectHands();
+
+            osc1.freq(targetFreq);
+            osc2.freq(targetHarmonicFreq);
+
+            fill(255);
+            textSize(24);
+            text(`Melody: ${Math.round(targetFreq)} Hz`, 20, 30);
+            text(`Harmony: ${Math.round(targetHarmonicFreq)} Hz`, 20, 60);
+        }
+
+        function mousePressed() {
+            if (!isStarted) {
+                osc1.start();
+                osc2.start();
+                isStarted = true;
+            }
+        }
+    </script>
+</body>
+</html>
