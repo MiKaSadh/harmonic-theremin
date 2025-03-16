@@ -18,9 +18,8 @@
         let targetHarmonicFreq = 329.63;
 
         async function setup() {
-            let canvas = createCanvas(640, 480);
-            window.mousePressed = startSound; // ← ここでクリックイベントをバインド
-
+            createCanvas(640, 480);
+            
             video = createCapture(VIDEO);
             video.size(640, 480);
             video.hide();
@@ -86,14 +85,12 @@
             text(`Harmony: ${Math.round(targetHarmonicFreq)} Hz`, 20, 60);
         }
 
-        function startSound() {
-            console.log("クリックが検出されました！"); // ← クリックが検出されているか確認
+        function mousePressed() {
             if (!isStarted) {
-                userStartAudio(); // ← ここでオーディオを明示的に開始
+                userStartAudio(); 
                 osc1.start();
                 osc2.start();
                 isStarted = true;
-                console.log("オーディオが開始されました！");
             }
         }
     </script>
