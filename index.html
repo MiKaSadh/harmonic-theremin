@@ -19,8 +19,8 @@
 
         async function setup() {
             let canvas = createCanvas(640, 480);
-            canvas.mousePressed(startSound); // ← ここでクリックイベントをバインド
-            
+            window.mousePressed = startSound; // ← ここでクリックイベントをバインド
+
             video = createCapture(VIDEO);
             video.size(640, 480);
             video.hide();
@@ -93,11 +93,8 @@
                 osc1.start();
                 osc2.start();
                 isStarted = true;
+                console.log("オーディオが開始されました！");
             }
-        }
-
-        function touchStarted() {
-            startSound(); // ← スマホでも動作するように touch イベントを設定
         }
     </script>
 </body>
